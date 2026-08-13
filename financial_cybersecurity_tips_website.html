@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Cybersecurity — Decrypt Protocol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #050a12;
+    --bg-2: #081020;
+    --panel: #0b1424;
+    --panel-2: #0f1b30;
+    --steel: #223353;
+    --line: rgba(130, 180, 255, 0.11);
+    --text: #e9f2fc;
+    --text-dim: #66809f;
+    --accent: #37d6ff;
+    --accent-dim: rgba(55, 214, 255, 0.13);
+    --alert: #ff3b5c;
+    --alert-dim: rgba(255, 59, 92, 0.13);
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+  }
+
+  /* faint CRT scanline texture, whole page */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.018) 0px,
+      rgba(255,255,255,0.018) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    z-index: 50;
+  }
+
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    padding: 96px 24px 70px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    background: radial-gradient(ellipse 900px 480px at 50% -8%, rgba(55,214,255,0.07), transparent);
+  }
+
+  #matrix {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.28;
+  }
+
+  .hero-inner { position: relative; z-index: 2; }
+
+  .status-line {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .status-line b { color: var(--accent); font-weight: 500; }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 5.2vw, 3.7rem);
+    letter-spacing: -0.02em;
+    margin: 22px auto 18px;
+    max-width: 16ch;
+    line-height: 1.08;
+    min-height: 2.2em;
+  }
+
+  .hero h1 .cursor {
+    display: inline-block;
+    width: 0.5ch;
+    background: var(--accent);
+    margin-left: 2px;
+    animation: blink 0.9s steps(1) infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero h1 .cursor { display: none; }
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .hero p.sub {
+    max-width: 46ch;
+    margin: 0 auto;
+    color: var(--text-dim);
+    font-size: 1.02rem;
+  }
+
+  .hero p.sub em { color: var(--accent); font-style: normal; font-family: var(--font-mono); font-size: 0.92em; }
+
+  /* ---------- Brief ---------- */
+  .brief {
+    max-width: 740px;
+    margin: 0 auto;
+    padding: 40px 24px 6px;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    color: var(--text-dim);
+    text-align: center;
+    line-height: 1.8;
+  }
+  .brief strong { color: var(--text); font-weight: 500; }
+
+  /* ---------- File grid ---------- */
+  .vault {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 46px 24px 100px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 20px;
+  }
+
+  .box {
+    position: relative;
+    background: linear-gradient(160deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .box:hover, .box:focus-within, .box.open {
+    border-color: rgba(55,214,255,0.4);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(55,214,255,0.08);
+    transform: translateY(-2px);
+  }
+
+  .chrome {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dots { display: flex; gap: 6px; flex: none; }
+  .dots span { width: 9px; height: 9px; border-radius: 50%; display: block; }
+  .dots span:nth-child(1) { background: #ff5f56; }
+  .dots span:nth-child(2) { background: #ffbd2e; }
+  .dots span:nth-child(3) { background: #27c93f; }
+
+  .filename {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lockstate {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border: 1px solid var(--steel);
+    border-radius: 4px;
+    padding: 2px 6px;
+    flex: none;
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+  .box.open .lockstate { color: var(--accent); border-color: rgba(55,214,255,0.4); }
+
+  .box-content { padding: 18px 18px 20px; }
+
+  .box-id {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--steel);
+    letter-spacing: 0.1em;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .box-title {
+    font-family: var(--font-mono);
+    font-size: 1.02rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text);
+    letter-spacing: 0.01em;
+    min-height: 1.3em;
+  }
+
+  .box-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s ease;
+  }
+  .box.open .box-body { grid-template-rows: 1fr; }
+  .box-body-inner { overflow: hidden; }
+
+  .box-body-content {
+    padding-top: 14px;
+    margin-top: 12px;
+    border-top: 1px dashed var(--line);
+    font-size: 14.5px;
+    color: #c7d2e6;
+  }
+
+  .box-body-content .lead { color: var(--text-dim); margin: 0 0 10px; }
+  .box-body-content u {
+    color: var(--accent);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-top: 8px;
+  }
+  .box-body-content ol { margin: 6px 0 12px; padding-left: 20px; }
+  .box-body-content li { margin-bottom: 4px; }
+  .box-body-content b { color: var(--alert); }
+
+  .callout {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--alert-dim);
+    border: 1px solid rgba(255,59,92,0.35);
+    border-radius: 8px;
+    color: #ffb0bb;
+    font-size: 13px;
+  }
+
+  .code-sample {
+    font-family: var(--font-mono);
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: inline-block;
+    color: var(--accent);
+    margin-top: 6px;
+    font-size: 13px;
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 26px 24px 40px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 480px) {
+    .hero { padding: 68px 18px 50px; }
+    .vault { padding: 34px 16px 72px; gap: 14px; }
+  }
+</style>
+</head>
+<body>
+
+  <section class="hero">
+    <canvas id="matrix" aria-hidden="true"></canvas>
+    <div class="hero-inner">
+      <div class="status-line">10 files found — <b>encrypted</b> — awaiting key</div>
+      <h1 id="headline">&nbsp;</h1>
+      <p class="sub">Your accounts are locked behind habits, not just passwords. Open each file below to decrypt one protocol — <em>click or press Enter</em>.</p>
+    </div>
+  </section>
+
+  <p class="brief"><strong>Threat model:</strong> phishing links, SIM-swapped OTPs, unpatched apps, and public Wi-Fi are the four most common entry points into a personal bank account. Every file below closes one of those doors.</p>
+
+  <div class="vault">
+
+    <article class="box" tabindex="0" data-title="Strong &amp; unique passwords">
+      <div class="chrome">
+        <span class="dots"><span></span><span></span><span></span></span>
+        <span class="filename">passwords.vault</span>
+        <span class="lockstate">locked</span>
+      </div>
+      <div class="box-content">
+        <span class="box-id">FILE_01 // 9F3A-C2E1</span>
+        <h2 class="box-title"></h2>
+        <div class="box-body"><div class="box-body-inner"><div class="box-body-content">
+          <p class="lead">Your password is the first lock on the door. Mix case, numbers, and symbols — never birthdates, names, or "123456."</p>
+          <div class="code-sample">✅ T9#kL2@vQ8!mP1</div>
+          <u>Use a manager</u>
+          <ol><li>Bitwarden</li><li>1Password</li><li>KeePass</li></ol>
+        </div></div></div>
+      </div>
+    </article>
+
+    <article class="box" tabindex="0" data-title="Two-factor authentication">
+      <div class="chrome">
+        <span class="dots"><span></span><span></span><span></span></span>
+        <span class="filename">two_factor.key</span>
+        <span class="lockstate">locked</span>
+      </div>
+      <div class="box-content">
+        <span class="box-id">FILE_02 // 4B1D-77AA</span>
+        <h2 class="box-title"></h2>
+        <div class="box-body"><div class="box-body-inner"><div class="box-body-content">
+          <p class="lead">A second lock beyond the password — hard to pick from the outside.</p>
+          <u>Prefer</u>
+          <ol><li>Authenticator apps (Authy, Google, Microsoft)</li><li>Hardware security keys</li></ol>
+          <div class="callout">Avoid SMS OTP where possible — SIM-swap fraud can redirect your texts.</div>
+        </div></div></div>
+      </div>
+    </article>
+
+    <article class="box" tabindex="0" data-title="Phishing red flags">
+      <div class="chrome">
+        <span class="dots"><span></span><span></span><span></span></span>
+        <span class="filename">phishing_scan.log</span>
+        <span class="lockstate">locked</span>
+      </div>
+      <div class="box-content">
+        <span class="box-id">FILE_03 // E20F-9C4B</span>
+        <h2 class="box-title"></h2>
+        <div class="box-body"><div class="box-body-inner"><div class="box-body-content">
+          <p class="lead">Phishing tries to trick you into handing over the key. Watch for:</p>
+          <ol><li>Urgent "act now" messages</li><li>Lookalike bank login pages</li><li>Unexpected attachments or links</li></ol>
+          <u>Instead</u>
+          <ol><li>Type banking URLs manually</li><li>Verify the sender's address</li><li>Never share an OTP or PIN, even to "verify" you</li></ol>
+        </div></div></div>
+      </div>
+    </article>
+
+    <article class="box" tabindex="0" data-title="Keep everything updated">
+      <div class="chrome">
+        <span class="dots"><span></span><span></span><span></span></span>
+        <span class="filename">patch_status.sys</span>
+        <span class="lockstate">locked</span>
+      </div>
+      <div class="box-content">
+        <span class="box-id">FILE_04 // 61AE-30D2</span>
+        <h2 class="box-title"></h2>
+        <div class="box-body"><div class="box-body-inner"><div class="box-body-content">
+          <p class="lead">Outdated software is a door left ajar. Update your OS, banking apps, browser, and antivirus as soon as patches land.</p>
+          <b>Why it matters:</b> updates usually ship the fix for a vulnerability that's already being exploited elsewhere.
+        </div></div></div>
+      </div>
+    </article>
+
+    <article class="box" tabindex="0" data-title="Public Wi-Fi, private money">
+      <div class="chrome">
+        <span class="dots"><span></span><span></span><span></span></span>
+        <span class="filename">public_wifi.risk</span>
+        <span class="lockstate">locked</span>
+      </div>
+      <div class="box-content">
+        <span class="box-id">FILE_05 // 0D77-F41C</span>
+        <h2 class="box-title"></h2>
+        <div class="box-body"><div class="box-body-inner"><div class="box-body-content">
+          <p class="lead">Open networks let others watch traffic pass. Avoid on public Wi-Fi, or use a trusted VPN:</p>
+          <ol><li>Banking apps</li><li>Investment accounts</li><li>Payment wallets</li></ol>
+        </div></div></div>
+      </div>
+    </article>
+
+    <article class="box" tabindex="0" data-title="Watch the account, not just the vault">
+      <div class="chrome">
+        <span class="dots"><span></span><span></span><span></span></span>
+        <span class="filename">tx_monitor.feed</span>
+        <span class="lockstate">locked</span>
+      </div>
+      <div class="box-content">
+        <span class="box-id">FILE_06 // A8B2-1E90</span>
+        <h2 class="box-title"></h2>
+        <div class="box-body"><div class="box-body-inner"><div class="box-body-content">
+          <p class="lead">Early detection stops fraud before it spreads. Check regularly:</p>
+          <ol><li>Bank &amp; credit card statements</li><li>UPI / payment app history</li><li>Investment activity</li></ol>
+          <u>Turn on</u>
+          <ol><li>Transaction &amp; login alerts</li><li>Balance updates</li></ol>
+        </div></div></div>
+      </div>
+    </article>
+
+    <article class="box" tabindex="0" data-title="Official apps only">
+      <div class="chrome">
+        <span class="dots"><span></span><span></span><span></span></span>
+        <span class="filename">app_verify.chk</span>
+        <span class="lockstate">locked</span>
+      </div>
+      <div class="box-content">
+        <span class="box-id">FILE_07 // 3FC5-8821</span>
+        <h2 class="box-title"></h2>
+        <div class="box-body"><div class="box-body-inner"><div class="box-body-content">
+          <p class="lead">A fake app is a counterfeit key that opens the wrong door — straight to a scammer.</p>
+          <ol><li>Download only from the Play Store or App Store</li><li>Check the developer name</li><li>Never sideload an APK from an unknown site</li></ol>
+        </div></div></div>
+      </div>
+    </article>
+
+    <article class="box" tabindex="0" data-title="What never leaves your hands">
+      <div class="chrome">
+        <span class="dots"><span></span><span></span><span></span></span>
+        <span class="filename">no_share.rule</span>
+        <span class="lockstate">locked</span>
+      </div>
+      <div class="box-content">
+        <span class="box-id">FILE_08 // 7729-BEA0</span>
+        <h2 class="box-title"></h2>
+        <div class="box-body"><div class="box-body-inner"><div class="box-body-content">
+          <p class="lead">Never share, by call, text, or email:</p>
+          <ol><li>OTPs &amp; ATM PINs</li><li>CVV or full card details</li><li>Internet banking passwords</li></ol>
+          <div class="callout">Your bank will never call or message asking for these.</div>
+        </div></div></div>
+      </div>
+    </article>
+
+    <article class="box" tabindex="0" data-title="Secure the device in your pocket">
+      <div class="chrome">
+        <span class="dots"><span></span><span></span><span></span></span>
+        <span class="filename">device_lock.cfg</span>
+        <span class="lockstate">locked</span>
+      </div>
+      <div class="box-content">
+        <span class="box-id">FILE_09 // C410-5D6F</span>
+        <h2 class="box-title"></h2>
+        <div class="box-body"><div class="box-body-inner"><div class="box-body-content">
+          <p class="lead">Your phone is a financial instrument now — treat it like one:</p>
+          <ol><li>Fingerprint or face unlock</li><li>Remote-tracking enabled</li><li>SIM locked with a PIN</li><li>Mobile security software installed</li></ol>
+        </div></div></div>
+      </div>
+    </article>
+
+    <article class="box" tabindex="0" data-title="Back up the paper trail">
+      <div class="chrome">
+        <span class="dots"><span></span><span></span><span></span></span>
+        <span class="filename">backup_archive.enc</span>
+        <span class="lockstate">locked</span>
+      </div>
+      <div class="box-content">
+        <span class="box-id">FILE_10 // 2E9A-4471</span>
+        <h2 class="box-title"></h2>
+        <div class="box-body"><div class="box-body-inner"><div class="box-body-content">
+          <p class="lead">Ransomware or a dead drive shouldn't cost you your records. Back up:</p>
+          <ol><li>Financial documents &amp; tax records</li><li>Investment reports</li><li>2FA recovery codes</li></ol>
+          <u>Safely, via</u>
+          <ol><li>Encrypted cloud storage</li><li>External drives kept somewhere secure</li></ol>
+        </div></div></div>
+      </div>
+    </article>
+
+  </div>
+
+  <footer>decrypt protocol // <span id="decryptCount">0</span>/10 files opened // session secure</footer>
+
+<script>
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var CIPHER_CHARS = "!<>-_\\/[]{}=+*^?#%$&01";
+
+  function scrambleReveal(el, finalText, duration) {
+    if (reduceMotion) { el.textContent = finalText; return; }
+    var len = finalText.length;
+    var startTime = null;
+    function frame(ts) {
+      if (!startTime) startTime = ts;
+      var progress = Math.min((ts - startTime) / duration, 1);
+      var revealCount = Math.floor(progress * len);
+      var out = "";
+      for (var i = 0; i < len; i++) {
+        if (i < revealCount) {
+          out += finalText[i];
+        } else if (finalText[i] === " ") {
+          out += " ";
+        } else {
+          out += CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
+        }
+      }
+      el.textContent = out;
+      if (progress < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        el.textContent = finalText;
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // headline decrypt on load
+  var headlineFinal = "Essential Financial Cybersecurity Tips";
+  var headlineEl = document.getElementById('headline');
+  if (reduceMotion) {
+    headlineEl.textContent = headlineFinal;
+  } else {
+    scrambleReveal(headlineEl, headlineFinal, 1400);
+    setTimeout(function(){
+      var cursor = document.createElement('span');
+      cursor.className = 'cursor';
+      cursor.innerHTML = '&nbsp;';
+      headlineEl.appendChild(cursor);
+    }, 1450);
+  }
+
+  // card titles: locked cipher preview, decrypt on open
+  var openedCount = 0;
+  var counterEl = document.getElementById('decryptCount');
+
+  document.querySelectorAll('.box').forEach(function(box){
+    var titleEl = box.querySelector('.box-title');
+    var finalTitle = box.getAttribute('data-title');
+    var lockEl = box.querySelector('.lockstate');
+    var decrypted = false;
+
+    // show scrambled cipher text at rest
+    function setCipherPreview() {
+      if (reduceMotion) { titleEl.textContent = finalTitle; return; }
+      var out = "";
+      for (var i = 0; i < finalTitle.length; i++) {
+        out += finalTitle[i] === " " ? " " : CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
+      }
+      titleEl.textContent = out;
+    }
+    setCipherPreview();
+
+    function toggle(){
+      var willOpen = !box.classList.contains('open');
+      box.classList.toggle('open');
+      if (willOpen && !decrypted) {
+        decrypted = true;
+        scrambleReveal(titleEl, finalTitle, 550);
+        lockEl.textContent = 'decrypted';
+        openedCount++;
+        counterEl.textContent = openedCount;
+      } else if (!willOpen) {
+        lockEl.textContent = decrypted ? 'decrypted' : 'locked';
+      } else {
+        lockEl.textContent = 'decrypted';
+      }
+    }
+    box.addEventListener('click', toggle);
+    box.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+  });
+
+  // matrix rain, ambient, hero only
+  if (!reduceMotion) {
+    var canvas = document.getElementById('matrix');
+    var ctx = canvas.getContext('2d');
+    var hero = document.querySelector('.hero');
+    var chars = "01#$%&{}[]<>";
+    var fontSize = 14;
+    var columns, drops;
+
+    function resize() {
+      canvas.width = hero.clientWidth;
+      canvas.height = hero.clientHeight;
+      columns = Math.floor(canvas.width / fontSize);
+      drops = new Array(columns).fill(1);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function draw() {
+      ctx.fillStyle = "rgba(5,10,18,0.15)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#37d6ff";
+      ctx.font = fontSize + "px 'JetBrains Mono', monospace";
+      for (var i = 0; i < drops.length; i++) {
+        var text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+  }
+</script>
+
+</body>
+</html>
